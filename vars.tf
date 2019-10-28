@@ -24,7 +24,8 @@ variable "zone" {
   default = "us-west1-a"
 }
 
-variable "project" {}
+variable "project" {
+}
 
 variable "master_machine_type" {
   default = "n1-standard-1"

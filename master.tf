@@ -18,21 +18,21 @@
 // This script will install docker, the kubelet and configure networking on the
 // node.
 data "template_file" "prereq-master" {
-  template = "${file("tf-scripts/prereq.sh")}"
+  template = file("tf-scripts/prereq.sh")
 
-  vars {
-    bridge-cidr = "${module.subnets.master_container_cidr}"
-    dns-ip      = "${module.subnets.dns_service_ip}"
+  vars = {
+    bridge-cidr = module.subnets.master_container_cidr
+    dns-ip      = module.subnets.dns_service_ip
   }
 }
 
 // This script will install Kubernetes on the master.
 data "template_file" "master" {
-  template = "${file("tf-scripts/master.sh")}"
+  template = file("tf-scripts/master.sh")
 
-  vars {
-    token        = "${var.bootstrap_token}"
-    service-cidr = "${module.subnets.service_cidr}"
+  vars = {
+    token        = var.bootstrap_token
+    service-cidr = module.subnets.service_cidr
   }
 }
 
@@ -45,13 +45,13 @@ data "template_cloudinit_config" "master" {
   part {
     filename     = "scripts/per-instance/10-prereq.sh"
     content_type = "text/x-shellscript"
-    content      = "${data.template_file.prereq-master.rendered}"
+    content      = data.template_file.prereq-master.rendered
   }
 
   part {
     filename     = "scripts/per-instance/20-master.sh"
     content_type = "text/x-shellscript"
-    content      = "${data.template_file.master.rendered}"
+    content      = data.template_file.master.rendered
   }
 
   // Note that this script is run per boot while the others are only run once
@@ -59,7 +59,7 @@ data "template_cloudinit_config" "master" {
   part {
     filename     = "scripts/per-boot/10-iptables.sh"
     content_type = "text/x-shellscript"
-    content      = "${data.template_file.iptables.rendered}"
+    content      = data.template_file.iptables.rendered
   }
 }
 
@@ -70,19 +70,19 @@ data "template_cloudinit_config" "master" {
 // the master will be routed to the master.
 resource "google_compute_route" "master" {
   name                   = "${var.cluster-name-base}-master"
-  dest_range             = "${module.subnets.master_container_cidr}"
-  network                = "${google_compute_network.network.name}"
-  next_hop_instance      = "${google_compute_instance.master.name}"
-  next_hop_instance_zone = "${var.zone}"
+  dest_range             = module.subnets.master_container_cidr
+  network                = google_compute_network.network.name
+  next_hop_instance      = google_compute_instance.master.name
+  next_hop_instance_zone = var.zone
   priority               = 10
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 // VMs
 resource "google_compute_instance" "master" {
-  name           = "${var.cluster-name-base}-master"
-  machine_type   = "${var.master_machine_type}"
-  zone           = "${var.zone}"
+  name         = "${var.cluster-name-base}-master"
+  machine_type = var.master_machine_type
+  zone         = var.zone
 
   // This allows this VM to send traffic from containers without NAT.  Without
   // this set GCE will verify that traffic from a VM only comes from an IP
@@ -95,14 +95,14 @@ resource "google_compute_instance" "master" {
     size  = "200"
   }
 
-  metadata {
-    "user-data" = "${data.template_cloudinit_config.master.rendered}"
+  metadata = {
+    "user-data"          = data.template_cloudinit_config.master.rendered
     "user-data-encoding" = "base64"
-}
+  }
 
   network_interface {
-    subnetwork = "${google_compute_subnetwork.subnet.name}"
-    address    = "${module.subnets.master_ip}"
+    subnetwork = google_compute_subnetwork.subnet.name
+    address    = module.subnets.master_ip
 
     access_config {
       // Ephemeral IP
