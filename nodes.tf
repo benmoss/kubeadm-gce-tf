@@ -34,7 +34,7 @@ data "template_file" "node" {
 
   vars = {
     token     = var.bootstrap_token
-    master-ip = google_compute_instance.master.network_interface[0].address
+    master-ip = module.subnets.master_ip
   }
 }
 
@@ -95,10 +95,12 @@ resource "google_compute_instance" "node" {
   // assigned to that VM.
   can_ip_forward = true
 
-  disk {
-    image = "ubuntu-os-cloud/ubuntu-1604-lts"
-    type  = "pd-ssd"
-    size  = "200"
+  boot_disk {
+    initialize_params {
+      image = "ubuntu-os-cloud/ubuntu-1604-lts"
+      type  = "pd-ssd"
+      size  = "200"
+    }
   }
 
   metadata = {
@@ -108,7 +110,7 @@ resource "google_compute_instance" "node" {
 
   network_interface {
     subnetwork = google_compute_subnetwork.subnet.name
-    address    = element(module.subnets.node_ips, count.index)
+    network_ip    = element(module.subnets.node_ips, count.index)
 
     access_config {
       // Ephemeral IP

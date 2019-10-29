@@ -49,7 +49,7 @@ output "master_ip" {
 resource "null_resource" "nodes" {
   count = "${var.num-nodes}"
 
-  triggers {
+  triggers  = {
     // This is the VM IP for each node
     host_ip        = "${cidrhost("${cidrsubnet("${var.cidr}", 8, 0)}", 3+count.index)}"
 
@@ -60,10 +60,10 @@ resource "null_resource" "nodes" {
 
 // This is an array of all of the host IPs for each node
 output "node_ips" {
-  value = ["${null_resource.nodes.*.triggers.host_ip}"]
+  value = "${null_resource.nodes.*.triggers.host_ip}"
 }
 
 // This is the CIDR ranges per node for containers running on those nodes.
 output "node_container_cidrs" {
-  value = ["${null_resource.nodes.*.triggers.container_cidr}"]
+  value = "${null_resource.nodes.*.triggers.container_cidr}"
 }

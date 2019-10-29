@@ -1,4 +1,4 @@
-#!/bin/bash -v
+#!/bin/bash -ve
 
 # Copyright 2016 Joe Beda
 #
@@ -14,14 +14,4 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Retry kubeadm join while we wait for the master to be up.
-#
-# This should be done inside of kubeadm.  Fixed but waiting on next release. See
-# https://github.com/kubernetes/kubernetes/issues/35533
-for i in {1..50}; do
-  if kubeadm join --token=${token} ${master-ip} ; then
-    break
-  else
-    sleep 15
-  fi
-done
+kubeadm join --token=${token} --discovery-token-unsafe-skip-ca-verification ${master-ip}:6443

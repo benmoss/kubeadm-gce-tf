@@ -28,7 +28,7 @@ variable "project" {
 }
 
 variable "master_machine_type" {
-  default = "n1-standard-1"
+  default = "n1-standard-2"
 }
 
 variable "node_machine_type" {

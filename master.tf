@@ -89,10 +89,12 @@ resource "google_compute_instance" "master" {
   // assigned to that VM.
   can_ip_forward = true
 
-  disk {
-    image = "ubuntu-os-cloud/ubuntu-1604-lts"
-    type  = "pd-ssd"
-    size  = "200"
+  boot_disk {
+    initialize_params {
+      image = "ubuntu-os-cloud/ubuntu-1604-lts"
+      type  = "pd-ssd"
+      size  = "200"
+    }
   }
 
   metadata = {
@@ -102,7 +104,7 @@ resource "google_compute_instance" "master" {
 
   network_interface {
     subnetwork = google_compute_subnetwork.subnet.name
-    address    = module.subnets.master_ip
+    network_ip    = module.subnets.master_ip
 
     access_config {
       // Ephemeral IP
